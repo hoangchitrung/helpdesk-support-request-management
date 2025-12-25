@@ -1,0 +1,12 @@
+Topic (HelpDesk Support Requested Management):
+
+- In organizations, technical support requests are frequently generated and must be carefully tracked to ensure timely resolution. A helpdesk system helps manage requests, assign tasks, and monitor work progress.
+
+Required Functions:
+
+- Create support requests with content, priority level, and submission time.
+- Manage requester and support staff information.
+- Assign support requests to staff members.
+- Track request status: newly created, in progress, completed.
+- Update processing progress and maintain a history of status changes.
+- Search support requests by status or by requester.
