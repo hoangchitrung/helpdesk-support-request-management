@@ -11,12 +11,15 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  TextEditingController _usernameInputController = TextEditingController();
-  TextEditingController _passwordInputController = TextEditingController();
+  final TextEditingController _usernameInputController =
+      TextEditingController();
+  final TextEditingController _passwordInputController =
+      TextEditingController();
 
   @override
   void dispose() {
     _usernameInputController.dispose();
+    _passwordInputController.dispose();
     super.dispose();
   }
 
@@ -28,6 +31,7 @@ class _LoginScreenState extends State<LoginScreen> {
           "Login Screen",
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
+        automaticallyImplyLeading: false,
         backgroundColor: Colors.blue[400],
       ),
       body: Padding(
