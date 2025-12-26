@@ -6,6 +6,7 @@
 **/GoogleService-Info.plist
 firebase.json
 **/firebase.json
+src/lib/firebase_options.dart
 
 # Environment variables
 .env
