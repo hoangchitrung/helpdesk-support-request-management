@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:src/screens/auth/login_screen.dart';
-import 'package:src/screens/send_request_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:src/screens/dashboard/home_screen.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -19,7 +19,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(colorScheme: .fromSeed(seedColor: Colors.deepPurple)),
-      home: const LoginScreen(),
+      home: const HomeScreen(),
     );
   }
 }
