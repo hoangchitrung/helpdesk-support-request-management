@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:src/screens/auth/register_screen.dart';
+import 'package:src/screens/users/home_screen.dart';
+import 'package:src/services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -11,10 +13,80 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController _emailInputController =
-      TextEditingController();
+  final TextEditingController _emailInputController = TextEditingController();
   final TextEditingController _passwordInputController =
       TextEditingController();
+
+  // loading state
+  bool isLoading = false;
+
+  bool _validInput() {
+    // Lấy giá trị từ controller
+    String email = _emailInputController.text;
+    String password = _passwordInputController.text;
+
+    if (email.isEmpty || !email.contains("@")) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.red,
+          content: Text("Please enter your email correctly"),
+        ),
+      );
+      setState(() => isLoading = false);
+      return false;
+    }
+
+    if (password.isEmpty || password.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.red,
+          content: Text("Please enter your password correctly"),
+        ),
+      );
+      setState(() => isLoading = false);
+      return false;
+    }
+    return true;
+  }
+
+  Future<void> _login() async {
+    setState(() => isLoading = true);
+
+    if (!_validInput()) {
+      return;
+    }
+
+    String email = _emailInputController.text;
+    String password = _passwordInputController.text;
+
+    try {
+      final result = await AuthService().login(email, password);
+
+      if (result == "Login successful") {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: Colors.green,
+            content: Text("Login successful"),
+          ),
+        );
+        await Future.delayed(Duration(seconds: 3)); // delay 3 giây trước khi redirect
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => HomeScreen()),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.red,
+          content: Text("Error at login: $e"),
+        ),
+      );
+    } finally {
+      setState(() => isLoading = false);
+    }
+  }
 
   @override
   void dispose() {
@@ -71,8 +143,10 @@ class _LoginScreenState extends State<LoginScreen> {
               ],
             ),
             ElevatedButton(
-              onPressed: () {},
-              child: Text("Login", style: TextStyle(fontSize: 20)),
+              onPressed: isLoading ? null : _login,
+              child: isLoading
+                  ? CircularProgressIndicator()
+                  : Text("Login", style: TextStyle(fontSize: 20)),
             ),
           ],
         ),

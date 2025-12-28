@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:src/screens/auth/login_screen.dart';
+import 'package:src/services/auth_service.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -11,9 +12,96 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  TextEditingController _usernameInputController = TextEditingController();
-  TextEditingController _passwordInputController = TextEditingController();
-  TextEditingController _emailInputController = TextEditingController();
+  final TextEditingController _usernameInputController =
+      TextEditingController();
+  final TextEditingController _passwordInputController =
+      TextEditingController();
+  final TextEditingController _emailInputController = TextEditingController();
+
+  // loading state
+  bool isLoading = false;
+
+  Future<void> _register() async {
+    setState(() => isLoading = true);
+    // kiểm tra input trước khi ấn đăng nhập.
+    if (!_validateInput()) {
+      return;
+    }
+
+    // lấy giá trị từ phần nhập
+    String username = _usernameInputController.text;
+    String email = _emailInputController.text;
+    String password = _passwordInputController.text;
+
+    try {
+      final result = await AuthService().register(username, password, email);
+
+      if (result == "Register successful") {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: Colors.green,
+            content: Text("Register successful"),
+          ),
+        );
+        await Future.delayed(Duration(seconds: 3));
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => LoginScreen()),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.red,
+          content: Text("Error at register: $e"),
+        ),
+      );
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  bool _validateInput() {
+    // lấy giá trị từ TextEditingController
+    String username = _usernameInputController.text;
+    String email = _emailInputController.text;
+    String password = _passwordInputController.text;
+
+    if (username.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Please enter a username")));
+      setState(() => isLoading = false);
+      return false;
+    }
+
+    if (password.isEmpty || password.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Please enter a password and at least 6 length"),
+        ),
+      );
+      setState(() => isLoading = false);
+      return false;
+    }
+
+    if (email.isEmpty || !email.contains("@")) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "Please enter an email and make sure it correct format",
+          ),
+        ),
+      );
+      setState(() => isLoading = false);
+      return false;
+    }
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -76,8 +164,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ],
             ),
             ElevatedButton(
-              onPressed: () {},
-              child: Text("Register", style: TextStyle(fontSize: 20)),
+              onPressed: isLoading ? null : _register,
+              child: isLoading
+                  ? CircularProgressIndicator()
+                  : Text("Register", style: TextStyle(fontSize: 20)),
             ),
           ],
         ),
