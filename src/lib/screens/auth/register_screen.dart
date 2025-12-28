@@ -6,9 +6,7 @@ class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
   @override
-  State<StatefulWidget> createState() {
-    return _RegisterScreenState();
-  }
+  State<StatefulWidget> createState() => _RegisterScreenState();
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
@@ -20,6 +18,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   // loading state
   bool isLoading = false;
+
+  // show/hide password
+  bool _obsecurePassword = true;
 
   Future<void> _register() async {
     setState(() => isLoading = true);
@@ -133,8 +134,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
             SizedBox(height: 20),
             TextField(
               controller: _passwordInputController,
+              obscureText: _obsecurePassword,
               decoration: InputDecoration(
                 label: Text("Password", style: TextStyle(fontSize: 20)),
+                suffixIcon: IconButton(
+                  icon: _obsecurePassword
+                      ? Icon(Icons.visibility_off)
+                      : Icon(Icons.visibility),
+                  onPressed: () {
+                    setState(() {
+                      _obsecurePassword = !_obsecurePassword;
+                    });
+                  },
+                ),
               ),
             ),
             SizedBox(height: 20),

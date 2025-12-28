@@ -19,7 +19,6 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: "Helpdesk Support Request App",
-      debugShowCheckedModeBanner: false,
       home: const LoginScreen(),
     );
   }

@@ -1,6 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:src/screens/auth/login_screen.dart';
+import 'package:src/screens/users/add_request_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -12,6 +14,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  String username = "Loading...";
+
   // hàm logout
   Future<void> _logout() async {
     await FirebaseAuth.instance.signOut();
@@ -21,6 +25,25 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // Get user info from firebase
+  Future<void> _loadUserInfo() async {
+    String uuid = FirebaseAuth.instance.currentUser!.uid;
+    DocumentSnapshot doc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(uuid)
+        .get();
+    setState(() {
+      username = doc['username'];
+    });
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _loadUserInfo();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -28,7 +51,7 @@ class _HomeScreenState extends State<HomeScreen> {
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text("Home"),
+            Icon(Icons.home, color: Colors.black, size: 30),
             TextButton(
               onPressed: _logout,
               child: Icon(Icons.logout_outlined, color: Colors.black, size: 30),
@@ -76,7 +99,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       CircleAvatar(radius: 30, child: Icon(Icons.person)),
                       SizedBox(width: 20),
-                      Text("Hoàng Chí Trung", style: TextStyle(fontSize: 20)),
+                      Text("${username}", style: TextStyle(fontSize: 20)),
                     ],
                   ),
                 ],
@@ -162,7 +185,16 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) {
+                return AddRequestScreen();
+              },
+            ),
+          );
+        },
         child: Icon(Icons.add),
       ),
     );

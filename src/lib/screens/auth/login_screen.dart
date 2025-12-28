@@ -7,9 +7,7 @@ class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() {
-    return _LoginScreenState();
-  }
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
@@ -19,6 +17,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
   // loading state
   bool isLoading = false;
+
+  // hide/show password
+  bool _obsecurePassword = true;
 
   bool _validInput() {
     // Lấy giá trị từ controller
@@ -69,7 +70,9 @@ class _LoginScreenState extends State<LoginScreen> {
             content: Text("Login successful"),
           ),
         );
-        await Future.delayed(Duration(seconds: 3)); // delay 3 giây trước khi redirect
+        await Future.delayed(
+          Duration(seconds: 3),
+        ); // delay 3 giây trước khi redirect
 
         Navigator.push(
           context,
@@ -119,8 +122,19 @@ class _LoginScreenState extends State<LoginScreen> {
             SizedBox(height: 20),
             TextField(
               controller: _passwordInputController,
+              obscureText: _obsecurePassword,
               decoration: InputDecoration(
                 label: Text("Password", style: TextStyle(fontSize: 20)),
+                suffixIcon: IconButton(
+                  onPressed: () {
+                    setState(() {
+                      _obsecurePassword = !_obsecurePassword;
+                    });
+                  },
+                  icon: _obsecurePassword
+                      ? Icon(Icons.visibility_off)
+                      : Icon(Icons.visibility),
+                ),
               ),
             ),
             SizedBox(height: 20),
