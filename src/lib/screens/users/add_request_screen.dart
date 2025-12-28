@@ -29,6 +29,7 @@ class _AddRequestState extends State<AddRequestScreen> {
   }
 
   Future<void> _createRequest() async {
+    setState(() => isLoading = true);
     if (!_validateInput()) {
       return;
     }
@@ -48,6 +49,9 @@ class _AddRequestState extends State<AddRequestScreen> {
             content: Text("Requests created successfully"),
           ),
         );
+
+        await Future.delayed(Duration(seconds: 2));
+        Navigator.pop(context);
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(

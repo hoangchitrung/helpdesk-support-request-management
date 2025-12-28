@@ -4,7 +4,7 @@ Topic (HelpDesk Support Requested Management):
 
 Required Functions:
 
-- Create support requests with content, priority level, and submission time.
+✔ Create support requests with content, priority level, and submission time. @done(25-12-28 19:33)
 - Manage requester and support staff information.
 - Assign support requests to staff members.
 - Track request status: newly created, in progress, completed.

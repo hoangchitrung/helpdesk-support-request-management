@@ -146,18 +146,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       Row(
                         children: [
                           Text(
-                            "Completed Requests: 6 / 11",
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Icon(Icons.check, color: Colors.green[300]),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          Text(
                             "In Progress: 5 / 11",
                             style: TextStyle(
                               fontSize: 15,
@@ -165,6 +153,18 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ),
                           Icon(Icons.warning, color: Colors.yellow[800]),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          Text(
+                            "Completed Requests: 6 / 11",
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Icon(Icons.check, color: Colors.green[300]),
                         ],
                       ),
                     ],
