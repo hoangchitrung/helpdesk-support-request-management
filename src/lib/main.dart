@@ -20,7 +20,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: "Helpdesk Support Request App",
       debugShowCheckedModeBanner: false,
-      home: const RegisterScreen(),
+      home: const LoginScreen(),
     );
   }
 }
