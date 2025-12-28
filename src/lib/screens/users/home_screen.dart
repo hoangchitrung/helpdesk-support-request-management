@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:src/models/requests.dart';
 import 'package:src/screens/auth/login_screen.dart';
 import 'package:src/screens/users/add_request_screen.dart';
 
@@ -37,11 +38,29 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  Future<List<Requests>> _loadUserRequest() async {
+    // take current user uid
+    String userId = FirebaseAuth.instance.currentUser!.uid;
+    // Query firebase
+    QuerySnapshot snapshot = await FirebaseFirestore.instance
+        .collection('requests')
+        .where('userId', isEqualTo: userId)
+        .get();
+
+    // Convert mỗi document sang request object
+    List<Requests> requests = snapshot.docs.map((doc) {
+      return Requests.fromMap(doc.data() as Map<String, dynamic>, doc.id);
+    }).toList();
+
+    return requests;
+  }
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     _loadUserInfo();
+    _loadUserRequest();
   }
 
   @override
@@ -173,13 +192,42 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             SizedBox(height: 25),
-            Column(
-              children: [
-                Text(
-                  "Recent Requests",
-                  style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
-                ),
-              ],
+            Text(
+              "List of requests",
+              style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+            ),
+            Expanded(
+              child: FutureBuilder(
+                future: _loadUserRequest(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return CircularProgressIndicator();
+                  }
+
+                  if (snapshot.hasError) {
+                    return Text("Error");
+                  }
+
+                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return Text('No requests found');
+                  }
+
+                  List<Requests> requests = snapshot.data!;
+                  return ListView.builder(
+                    itemCount: requests.length,
+                    itemBuilder: (context, index) {
+                      Requests request = requests[index];
+                      return Card(
+                        child: ListTile(
+                          title: Text(request.content),
+                          subtitle: Text("Priority: ${request.priority.name}"),
+                          trailing: Text("Status: ${request.status.name}"),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
             ),
           ],
         ),
