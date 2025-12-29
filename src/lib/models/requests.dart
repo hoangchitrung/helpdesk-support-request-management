@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-enum Status { newly_created, inProgress, completed }
+enum Status { newly_created, in_progress, completed }
 
 enum Priority { low, medium, high }
 

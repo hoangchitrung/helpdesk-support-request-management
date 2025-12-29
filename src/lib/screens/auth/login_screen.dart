@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:src/screens/admin/dashboard_screen.dart';
 import 'package:src/screens/auth/register_screen.dart';
+import 'package:src/screens/staff/home_screen.dart';
 import 'package:src/screens/users/home_screen.dart';
 import 'package:src/services/auth_service.dart';
 
@@ -63,7 +65,8 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       final result = await AuthService().login(email, password);
 
-      if (result == "Login successful") {
+      if (result == "requester") {
+        // Navigate to user home screen
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             backgroundColor: Colors.green,
@@ -77,6 +80,38 @@ class _LoginScreenState extends State<LoginScreen> {
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => HomeScreen()),
+        );
+      } else if (result == "staff") {
+        // staff home screen
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: Colors.green,
+            content: Text("Login successful"),
+          ),
+        );
+        await Future.delayed(
+          Duration(seconds: 3),
+        ); // delay 3 giây trước khi redirect
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => StaffHomeScreen()),
+        );
+      } else {
+        // admin dashboard
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: Colors.green,
+            content: Text("Login successful"),
+          ),
+        );
+        await Future.delayed(
+          Duration(seconds: 3),
+        ); // delay 3 giây trước khi redirect
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => DashboardScreen()),
         );
       }
     } catch (e) {

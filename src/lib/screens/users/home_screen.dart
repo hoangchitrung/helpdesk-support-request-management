@@ -17,6 +17,19 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   String username = "Loading...";
 
+  int totalRequest = 0;
+  // delete request
+  Future<void> _deleteRequest(String requestId) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('requests')
+          .doc(requestId)
+          .delete();
+    } catch (e) {
+      throw Exception("$e");
+    }
+  }
+
   // hàm logout
   Future<void> _logout() async {
     await FirebaseAuth.instance.signOut();
@@ -28,16 +41,17 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // Get user info from firebase
   Future<void> _loadUserInfo() async {
-    String uuid = FirebaseAuth.instance.currentUser!.uid;
+    String uid = FirebaseAuth.instance.currentUser!.uid;
     DocumentSnapshot doc = await FirebaseFirestore.instance
         .collection('users')
-        .doc(uuid)
+        .doc(uid)
         .get();
     setState(() {
       username = doc['username'];
     });
   }
 
+  // load user requests
   Future<List<Requests>> _loadUserRequest() async {
     // take current user uid
     String userId = FirebaseAuth.instance.currentUser!.uid;
@@ -153,7 +167,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       Row(
                         children: [
                           Text(
-                            "Total Requests: 11",
+                            "Total Requests: $totalRequest",
                             style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.bold,
@@ -165,7 +179,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       Row(
                         children: [
                           Text(
-                            "In Progress: 5 / 11",
+                            "In Progress: 0 / $totalRequest",
                             style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.bold,
@@ -177,7 +191,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       Row(
                         children: [
                           Text(
-                            "Completed Requests: 6 / 11",
+                            "Completed Requests: 0 / $totalRequest",
                             style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.bold,
@@ -213,17 +227,72 @@ class _HomeScreenState extends State<HomeScreen> {
                   }
 
                   List<Requests> requests = snapshot.data!;
+                  // get total request
+                  totalRequest = requests.length;
                   return ListView.builder(
                     itemCount: requests.length,
                     itemBuilder: (context, index) {
                       Requests request = requests[index];
-                      return Card(
-                        child: ListTile(
-                          title: Text(request.content),
-                          subtitle: Text("Priority: ${request.priority.name}"),
-                          trailing: Text("Status: ${request.status.name}"),
-                        ),
-                      );
+                      if (request.priority.name == "low") {
+                        return Dismissible(
+                          key: Key(request.id!),
+                          direction: DismissDirection.endToStart,
+                          onDismissed: (direction) {
+                            setState(() {
+                              _deleteRequest(request.id!);
+                            });
+                          },
+                          child: Card(
+                            child: ListTile(
+                              title: Text(request.content),
+                              subtitle: Text(
+                                "Priority: ${request.priority.name}",
+                              ),
+                              trailing: Text("Status: ${request.status.name}"),
+                            ),
+                          ),
+                        );
+                      } else if (request.priority.name == "medium") {
+                        return Dismissible(
+                          key: Key(request.id!),
+                          direction: DismissDirection.endToStart,
+                          onDismissed: (direction) {
+                            setState(() {
+                              _deleteRequest(request.id!);
+                            });
+                          },
+                          child: Card(
+                            color: Colors.yellow[200],
+                            child: ListTile(
+                              title: Text(request.content),
+                              subtitle: Text(
+                                "Priority: ${request.priority.name}",
+                              ),
+                              trailing: Text("Status: ${request.status.name}"),
+                            ),
+                          ),
+                        );
+                      } else {
+                        return Dismissible(
+                          key: Key(request.id!),
+                          direction: DismissDirection.endToStart,
+                          onDismissed: (direction) {
+                            setState(() {
+                              _deleteRequest(request.id!);
+                            });
+                          },
+                          child: Card(
+                            color: Colors.yellow[800],
+                            child: ListTile(
+                              title: Text(request.content),
+                              subtitle: Text(
+                                "Priority: ${request.priority.name}",
+                              ),
+                              trailing: Text("Status: ${request.status.name}"),
+                            ),
+                          ),
+                        );
+                      }
                     },
                   );
                 },
@@ -233,8 +302,8 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
+        onPressed: () async {
+          await Navigator.push(
             context,
             MaterialPageRoute(
               builder: (context) {
@@ -242,6 +311,7 @@ class _HomeScreenState extends State<HomeScreen> {
               },
             ),
           );
+          setState(() {});
         },
         child: Icon(Icons.add),
       ),

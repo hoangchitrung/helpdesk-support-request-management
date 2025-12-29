@@ -9,11 +9,23 @@ class AuthService {
   // hàm login
   Future<String> login(String email, String password) async {
     try {
+      // Verify với Firebase Auth
       UserCredential userCredential = await _auth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
-      return "Login successful";
+
+      // Get user uid
+      String uid = userCredential.user!.uid;
+
+      // fetch role từ firestore
+      DocumentSnapshot doc = await _firestore
+          .collection('users')
+          .doc(uid)
+          .get();
+
+      String role = doc['role'];
+      return role;
     } catch (e) {
       throw Exception("Error at login: $e");
     }
