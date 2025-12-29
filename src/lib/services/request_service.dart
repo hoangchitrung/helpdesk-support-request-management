@@ -27,4 +27,84 @@ class RequestService {
       throw Exception("Error at create request: $e");
     }
   }
+
+  Future<List<Requests>> loadAllRequests() async {
+    // lấy tất cả danh sách từ firebase về
+    QuerySnapshot snapshot = await FirebaseFirestore.instance
+        .collection('requests')
+        .get();
+    List<Requests> requests = snapshot.docs.map((doc) {
+      return Requests.fromMap(doc.data() as Map<String, dynamic>, doc.id);
+    }).toList();
+
+    return requests;
+  }
+
+  // delete request
+  Future<void> deleteRequest(String requestId) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('requests')
+          .doc(requestId)
+          .delete();
+    } catch (e) {
+      throw Exception("$e");
+    }
+  }
+
+  // load user requests
+  Future<List<Requests>> loadUserRequest() async {
+    // take current user uid
+    String userId = FirebaseAuth.instance.currentUser!.uid;
+    // Query firebase
+    QuerySnapshot snapshot = await FirebaseFirestore.instance
+        .collection('requests')
+        .where('userId', isEqualTo: userId)
+        .get();
+
+    // Convert mỗi document sang request object
+    List<Requests> requests = snapshot.docs.map((doc) {
+      return Requests.fromMap(doc.data() as Map<String, dynamic>, doc.id);
+    }).toList();
+
+    return requests;
+  }
+
+  Future<List<Requests>> loadRequestsByStatus(String status) async {
+    // lấy những quest nào thực hiện
+    QuerySnapshot snapshot = await FirebaseFirestore.instance
+        .collection('requests')
+        .where('status', isEqualTo: status)
+        .get();
+
+    // Convert to map
+    List<Requests> requests = snapshot.docs.map((doc) {
+      return Requests.fromMap(doc.data() as Map<String, dynamic>, doc.id);
+    }).toList();
+
+    return requests;
+  }
+
+  Future<int> getInProgressRequests() async {
+    QuerySnapshot snapshot = await FirebaseFirestore.instance
+        .collection('requests')
+        .where('status', isEqualTo: 'in_progress')
+        .get();
+    return snapshot.docs.length;
+  }
+
+  Future<int> getRequests() async {
+    QuerySnapshot snapshot = await FirebaseFirestore.instance
+        .collection('requests')
+        .get();
+    return snapshot.docs.length;
+  }
+
+  Future<int> getCompletedRequests() async {
+    QuerySnapshot snapshot = await FirebaseFirestore.instance
+        .collection('requests')
+        .where('status', isEqualTo: 'completed')
+        .get();
+    return snapshot.docs.length;
+  }
 }

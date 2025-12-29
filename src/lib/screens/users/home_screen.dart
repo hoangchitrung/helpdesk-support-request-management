@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:src/models/requests.dart';
 import 'package:src/screens/auth/login_screen.dart';
 import 'package:src/screens/users/add_request_screen.dart';
+import 'package:src/services/request_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -18,17 +19,6 @@ class _HomeScreenState extends State<HomeScreen> {
   String username = "Loading...";
 
   int totalRequest = 0;
-  // delete request
-  Future<void> _deleteRequest(String requestId) async {
-    try {
-      await FirebaseFirestore.instance
-          .collection('requests')
-          .doc(requestId)
-          .delete();
-    } catch (e) {
-      throw Exception("$e");
-    }
-  }
 
   // hàm logout
   Future<void> _logout() async {
@@ -51,30 +41,12 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  // load user requests
-  Future<List<Requests>> _loadUserRequest() async {
-    // take current user uid
-    String userId = FirebaseAuth.instance.currentUser!.uid;
-    // Query firebase
-    QuerySnapshot snapshot = await FirebaseFirestore.instance
-        .collection('requests')
-        .where('userId', isEqualTo: userId)
-        .get();
-
-    // Convert mỗi document sang request object
-    List<Requests> requests = snapshot.docs.map((doc) {
-      return Requests.fromMap(doc.data() as Map<String, dynamic>, doc.id);
-    }).toList();
-
-    return requests;
-  }
-
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     _loadUserInfo();
-    _loadUserRequest();
+    RequestService().loadUserRequest();
   }
 
   @override
@@ -212,7 +184,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             Expanded(
               child: FutureBuilder(
-                future: _loadUserRequest(),
+                future: RequestService().loadUserRequest(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return CircularProgressIndicator();
@@ -239,7 +211,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           direction: DismissDirection.endToStart,
                           onDismissed: (direction) {
                             setState(() {
-                              _deleteRequest(request.id!);
+                              RequestService().deleteRequest(request.id!);
                             });
                           },
                           child: Card(
@@ -258,7 +230,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           direction: DismissDirection.endToStart,
                           onDismissed: (direction) {
                             setState(() {
-                              _deleteRequest(request.id!);
+                              RequestService().deleteRequest(request.id!);
                             });
                           },
                           child: Card(
@@ -278,7 +250,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           direction: DismissDirection.endToStart,
                           onDismissed: (direction) {
                             setState(() {
-                              _deleteRequest(request.id!);
+                              RequestService().deleteRequest(request.id!);
                             });
                           },
                           child: Card(
