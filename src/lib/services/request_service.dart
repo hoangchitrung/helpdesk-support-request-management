@@ -70,19 +70,30 @@ class RequestService {
     return requests;
   }
 
-  Future<List<Requests>> loadRequestsByStatus(String status) async {
+  Future<List<Requests>> loadRequestsByPriority(List<String> priority) async {
     // lấy những quest nào thực hiện
-    QuerySnapshot snapshot = await FirebaseFirestore.instance
-        .collection('requests')
-        .where('status', isEqualTo: status)
-        .get();
+    List<Requests> allRequests = await loadAllRequests();
 
-    // Convert to map
-    List<Requests> requests = snapshot.docs.map((doc) {
-      return Requests.fromMap(doc.data() as Map<String, dynamic>, doc.id);
-    }).toList();
+    if (priority.isEmpty) {
+      return loadAllRequests();
+    }
 
-    return requests;
+    return allRequests
+        .where((request) => priority.contains(request.priority.name))
+        .toList();
+  }
+
+  Future<List<Requests>> loadRequestsByStatus(List<String> status) async {
+    // lấy những quest nào thực hiện
+    List<Requests> allRequests = await loadAllRequests();
+
+    if (status.isEmpty) {
+      return loadAllRequests();
+    }
+
+    return allRequests
+        .where((request) => status.contains(request.status.name))
+        .toList();
   }
 
   Future<int> getInProgressRequests() async {
