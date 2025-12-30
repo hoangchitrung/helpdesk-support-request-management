@@ -9,4 +9,4 @@ Required Functions:
 ✔ Assign support requests to staff members. @done(25-12-30 22:22)
 ✔ Track request status: newly created, in progress, completed. @done(25-12-30 22:21)
 - Update processing progress and maintain a history of status changes.
-- Search support requests by status or by requester.
+✔ Search support requests by status or by requester. @done(25-12-30 22:53)
