@@ -33,6 +33,7 @@ class _DashBoardState extends State<DashboardScreen> {
 
   List<Requests> filteredRequests = [];
   Map<String, String> usernameCache = {};
+  bool isFilterApplied = false;
 
   // hàm logout
   Future<void> _logout() async {
@@ -60,28 +61,30 @@ class _DashBoardState extends State<DashboardScreen> {
     List<String> selectedPriorities = [];
     List<String> selectedStatus = [];
     List<Requests> filtered = [];
+    // collect all selected priorities (allow multiple selections)
+    if (isLow) selectedPriorities.add('low');
+    if (isMedium) selectedPriorities.add('medium');
+    if (isHigh) selectedPriorities.add('high');
 
-    if (isLow) {
-      selectedPriorities.add('low');
-    } else if (isMedium) {
-      selectedPriorities.add('medium');
-    } else if (isHigh) {
-      selectedPriorities.add('high');
-    } else if (isNewlyCreated) {
-      selectedStatus.add('newly_created');
-    } else if (isInProgress) {
-      selectedStatus.add('in_progress');
-    } else if (isCompleted) {
-      selectedStatus.add('completed');
-    }
+    // collect all selected statuses
+    if (isNewlyCreated) selectedStatus.add('newly_created');
+    if (isInProgress) selectedStatus.add('in_progress');
+    if (isCompleted) selectedStatus.add('completed');
 
-    // Gọi service
+    // Determine whether any filter is applied
+    isFilterApplied =
+        selectedPriorities.isNotEmpty || selectedStatus.isNotEmpty;
+
+    // Call appropriate service
     if (selectedPriorities.isNotEmpty) {
       filtered = await RequestService().loadRequestsByPriority(
         selectedPriorities,
       );
-    } else {
+    } else if (selectedStatus.isNotEmpty) {
       filtered = await RequestService().loadRequestsByStatus(selectedStatus);
+    } else {
+      // no filters -> clear filtered list
+      filtered = [];
     }
 
     setState(() {
@@ -344,9 +347,9 @@ class _DashBoardState extends State<DashboardScreen> {
                     return CircularProgressIndicator();
                   }
 
-                  List<Requests> requests = filteredRequests.isNotEmpty
+                  List<Requests> requests = isFilterApplied
                       ? filteredRequests
-                      : snapshot.data ?? [];
+                      : (snapshot.data ?? []);
 
                   if (requests.isEmpty) {
                     return Text("No requests found");
