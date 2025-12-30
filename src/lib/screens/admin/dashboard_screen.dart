@@ -1,5 +1,8 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:src/models/requests.dart';
+import 'package:src/screens/admin/assign_request_screen.dart';
+import 'package:src/screens/auth/login_screen.dart';
 import 'package:src/services/request_service.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -24,13 +27,26 @@ class _DashBoardState extends State<DashboardScreen> {
   bool isInProgress = false;
   bool isCompleted = false;
 
+  int inProgressCount = 0;
+  int RequestCount = 0;
+  int CompletedCount = 0;
+
   List<Requests> filteredRequests = [];
   Map<String, String> usernameCache = {};
 
+  // hàm logout
+  Future<void> _logout() async {
+    await FirebaseAuth.instance.signOut();
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => LoginScreen()),
+    );
+  }
+
   Future<void> _loadStatistics() async {
-    int inProgressCount = await RequestService().getInProgressRequests();
-    int RequestCount = await RequestService().getRequests();
-    int CompletedCount = await RequestService().getCompletedRequests();
+    inProgressCount = await RequestService().getInProgressRequests();
+    RequestCount = await RequestService().getRequests();
+    CompletedCount = await RequestService().getCompletedRequests();
 
     setState(() {
       totalRequest = RequestCount;
@@ -88,8 +104,8 @@ class _DashBoardState extends State<DashboardScreen> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
+    AppLifecycleListener(onResume: _loadStatistics);
     _loadStatistics();
     _loadFilteredRequests();
   }
@@ -99,9 +115,18 @@ class _DashBoardState extends State<DashboardScreen> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.blue[400],
-        title: Text(
-          "Dashboard",
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              "Dashboard",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            TextButton(
+              onPressed: _logout,
+              child: Icon(Icons.logout_outlined, color: Colors.black, size: 30),
+            ),
+          ],
         ),
       ),
       body: Padding(
@@ -332,50 +357,68 @@ class _DashBoardState extends State<DashboardScreen> {
                     itemCount: requests.length,
                     itemBuilder: (context, index) {
                       Requests request = requests[index];
-                      return Card(
-                        color: request.priority.name == "low"
-                            ? Colors.blue[50]
-                            : request.priority.name == "medium"
-                            ? Colors.amber[50]
-                            : Colors.red[50],
-                        child: Padding(
-                          padding: EdgeInsets.all(12),
-                          child: ListTile(
-                            leading: Icon(
-                              request.priority.name == "low"
-                                  ? Icons.trending_down
-                                  : request.priority.name == "medium"
-                                  ? Icons.trending_flat
-                                  : Icons.trending_up,
-                              color: request.priority.name == "low"
-                                  ? Colors.blue[800]
-                                  : request.priority.name == "medium"
-                                  ? Colors.amber[800]
-                                  : Colors.red[800],
-                              size: 30,
-                            ),
-                            title: Text(
-                              request.content,
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            subtitle: FutureBuilder<String>(
-                              future: _getUsername(request.userId!),
-                              builder: (context, snapshot) {
-                                String username = snapshot.data ?? 'Unknown';
-                                return Text(
-                                  'Sent by: $username | Priority: ${request.priority.name}',
-                                  style: TextStyle(fontSize: 12),
-                                );
+                      return GestureDetector(
+                        onTap: () async {
+                          final result = await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) {
+                                return AssignRequestScreen(request: request);
                               },
                             ),
-                            trailing: Text(
-                              "${request.submissionTime.day}/${request.submissionTime.month}/${request.submissionTime.year}",
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey[700],
+                          );
+
+                          // Nếu AssignRequestScreen trả về true => có thay đổi, reload data
+                          if (result == true) {
+                            await _loadStatistics();
+                            await _loadFilteredRequests();
+                          }
+                        },
+                        child: Card(
+                          color: request.priority.name == "low"
+                              ? Colors.blue[50]
+                              : request.priority.name == "medium"
+                              ? Colors.amber[50]
+                              : Colors.red[50],
+                          child: Padding(
+                            padding: EdgeInsets.all(12),
+                            child: ListTile(
+                              leading: Icon(
+                                request.priority.name == "low"
+                                    ? Icons.trending_down
+                                    : request.priority.name == "medium"
+                                    ? Icons.trending_flat
+                                    : Icons.trending_up,
+                                color: request.priority.name == "low"
+                                    ? Colors.blue[800]
+                                    : request.priority.name == "medium"
+                                    ? Colors.amber[800]
+                                    : Colors.red[800],
+                                size: 30,
+                              ),
+                              title: Text(
+                                request.content,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              subtitle: FutureBuilder<String>(
+                                future: _getUsername(request.userId!),
+                                builder: (context, snapshot) {
+                                  String username = snapshot.data ?? 'Unknown';
+                                  return Text(
+                                    'Sent by: $username | Priority: ${request.priority.name}',
+                                    style: TextStyle(fontSize: 12),
+                                  );
+                                },
+                              ),
+                              trailing: Text(
+                                "${request.submissionTime.day}/${request.submissionTime.month}/${request.submissionTime.year}",
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[700],
+                                ),
                               ),
                             ),
                           ),

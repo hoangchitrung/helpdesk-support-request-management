@@ -6,7 +6,7 @@ enum Priority { low, medium, high }
 
 class Requests {
   String? id; // Document ID từ firestore
-  String? userId; // UID của user khi tạo request.
+  String userId; // UID của user khi tạo request.
   String? staffId; // UID của staff (có thể null khi chưa assign)
   String content;
   Status status;

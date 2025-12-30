@@ -77,7 +77,7 @@ class _LoginScreenState extends State<LoginScreen> {
           Duration(seconds: 3),
         ); // delay 3 giây trước khi redirect
 
-        Navigator.push(
+        Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => HomeScreen()),
         );
@@ -90,10 +90,10 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         );
         await Future.delayed(
-          Duration(seconds: 3),
+          Duration(seconds: 2),
         ); // delay 3 giây trước khi redirect
 
-        Navigator.push(
+        Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => StaffHomeScreen()),
         );
@@ -106,10 +106,10 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         );
         await Future.delayed(
-          Duration(seconds: 3),
+          Duration(seconds: 2),
         ); // delay 3 giây trước khi redirect
 
-        Navigator.push(
+        Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => DashboardScreen()),
         );

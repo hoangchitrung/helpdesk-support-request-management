@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:src/models/requests.dart';
+import 'package:src/models/users.dart';
 
 class RequestService {
   Future<String> createRequests(String content, Priority priority) async {
@@ -130,5 +131,57 @@ class RequestService {
         .get();
 
     return snapshot['username'];
+  }
+
+  // Lấy danh sách nhân viên dựa theo role ở trên bảng users
+  Future<List<Users>> getStaffList() async {
+    try {
+      QuerySnapshot snapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .where('role', isEqualTo: "staff")
+          .get();
+      List<Users> user = snapshot.docs.map((doc) {
+        return Users.fromMap(doc.data() as Map<String, dynamic>, doc.id);
+      }).toList();
+      return user;
+    } catch (e) {
+      throw Exception(e);
+    }
+  }
+
+  // assign staff vào request bằng cách gán doc id lên field staff_id
+  Future<void> assignStaff(String requestId, String staffId) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('requests')
+          .doc(requestId)
+          .update({'staffId': staffId});
+    } catch (e) {
+      throw Exception("Error assigning staff: $e");
+    }
+  }
+
+  // update request status
+  Future<void> updateStatus(String requestId) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('requests')
+          .doc(requestId)
+          .update({'status': 'in_progress'});
+    } catch (e) {
+      throw Exception("Error when update status: $e");
+    }
+  }
+
+  // update request with staffId and status
+  Future<void> updateRequestStatus(String requestId, String staffId) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('requests')
+          .doc(requestId)
+          .update({'staffId': staffId, 'status': 'in_progress'});
+    } catch (e) {
+      throw Exception("Error updating request: $e");
+    }
   }
 }
