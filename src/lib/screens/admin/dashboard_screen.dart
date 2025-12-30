@@ -1,6 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:src/models/requests.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:async';
 import 'package:src/screens/admin/assign_request_screen.dart';
 import 'package:src/screens/auth/login_screen.dart';
 import 'package:src/services/request_service.dart';
@@ -34,6 +36,12 @@ class _DashBoardState extends State<DashboardScreen> {
   List<Requests> filteredRequests = [];
   Map<String, String> usernameCache = {};
   bool isFilterApplied = false;
+  // search
+  final TextEditingController _searchController = TextEditingController();
+  bool isSearchActive = false;
+  List<Requests> searchResults = [];
+  List<Requests> allRequests = [];
+  bool isLoadingAllRequests = true;
 
   // hàm logout
   Future<void> _logout() async {
@@ -90,18 +98,70 @@ class _DashBoardState extends State<DashboardScreen> {
     setState(() {
       filteredRequests = filtered;
     });
+
+    // ensure usernames for filtered list
+    await _ensureUsernamesFor(filtered);
+
+    // If user has active search, reapply search on the new filtered set
+    if (_searchController.text.trim().isNotEmpty) {
+      await _onSearchChanged(_searchController.text.trim());
+    }
   }
 
-  Future<String> _getUsername(String userId) async {
-    if (usernameCache.containsKey(userId)) {
-      return usernameCache[userId]!;
+  Future<void> _onSearchChanged(String q) async {
+    String query = q.trim().toLowerCase();
+    if (query.isEmpty) {
+      setState(() {
+        isSearchActive = false;
+        searchResults = [];
+      });
+      return;
     }
+
+    // choose base list: if filters applied use filteredRequests, else allRequests
+    List<Requests> base = isFilterApplied ? filteredRequests : allRequests;
+    List<Requests> results = base
+        .where((r) => r.content.toLowerCase().contains(query))
+        .toList();
+    // prefetch usernames for results
+    await _ensureUsernamesFor(results);
+
+    setState(() {
+      isSearchActive = true;
+      searchResults = results;
+    });
+  }
+
+  // Ensure username cache contains usernames for given requests by batch fetching missing users
+  Future<void> _ensureUsernamesFor(List<Requests> requests) async {
+    final missing = requests
+        .map((r) => r.userId)
+        .where((id) => !usernameCache.containsKey(id))
+        .toSet()
+        .toList();
+
+    if (missing.isEmpty) return;
+
     try {
-      String username = await RequestService().getUsernameById(userId);
-      usernameCache[userId] = username;
-      return username;
-    } catch (e) {
-      return 'Unknown';
+      // Firestore whereIn supports up to 10 items per query; batch if necessary
+      for (int i = 0; i < missing.length; i += 10) {
+        final end = (i + 10 > missing.length) ? missing.length : i + 10;
+        final batch = missing.sublist(i, end);
+        final snap = await FirebaseFirestore.instance
+            .collection('users')
+            .where(FieldPath.documentId, whereIn: batch)
+            .get();
+        for (var doc in snap.docs) {
+          try {
+            usernameCache[doc.id] = doc['username'] ?? 'Unknown';
+          } catch (_) {
+            usernameCache[doc.id] = 'Unknown';
+          }
+        }
+      }
+      setState(() {});
+    } catch (_) {
+      // ignore errors for username prefetch
     }
   }
 
@@ -111,6 +171,29 @@ class _DashBoardState extends State<DashboardScreen> {
     AppLifecycleListener(onResume: _loadStatistics);
     _loadStatistics();
     _loadFilteredRequests();
+    _loadAllRequests();
+  }
+
+  Future<void> _loadAllRequests() async {
+    setState(() {
+      isLoadingAllRequests = true;
+    });
+    try {
+      List<Requests> list = await RequestService().loadAllRequests();
+      setState(() {
+        allRequests = list;
+      });
+      // prefetch usernames for the loaded requests
+      await _ensureUsernamesFor(list);
+    } catch (e) {
+      setState(() {
+        allRequests = [];
+      });
+    } finally {
+      setState(() {
+        isLoadingAllRequests = false;
+      });
+    }
   }
 
   @override
@@ -242,6 +325,35 @@ class _DashBoardState extends State<DashboardScreen> {
                 ),
               ],
             ),
+            SizedBox(height: 12),
+            // Search input (auto-search by content)
+            TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: 'Search requests by content...',
+                prefixIcon: Icon(Icons.search),
+                suffixIcon: _searchController.text.isNotEmpty
+                    ? IconButton(
+                        icon: Icon(Icons.clear),
+                        onPressed: () {
+                          _searchController.clear();
+                          _onSearchChanged('');
+                        },
+                      )
+                    : null,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                contentPadding: EdgeInsets.symmetric(
+                  vertical: 8,
+                  horizontal: 12,
+                ),
+              ),
+              onChanged: (value) {
+                _onSearchChanged(value);
+              },
+            ),
+            SizedBox(height: 12),
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
@@ -340,97 +452,92 @@ class _DashBoardState extends State<DashboardScreen> {
               ),
             ),
             Expanded(
-              child: FutureBuilder(
-                future: RequestService().loadAllRequests(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return CircularProgressIndicator();
-                  }
+              child: isLoadingAllRequests
+                  ? Center(child: CircularProgressIndicator())
+                  : Builder(
+                      builder: (context) {
+                        List<Requests> requests = isSearchActive
+                            ? searchResults
+                            : (isFilterApplied
+                                  ? filteredRequests
+                                  : allRequests);
 
-                  List<Requests> requests = isFilterApplied
-                      ? filteredRequests
-                      : (snapshot.data ?? []);
+                        if (requests.isEmpty) {
+                          return Text("No requests found");
+                        }
 
-                  if (requests.isEmpty) {
-                    return Text("No requests found");
-                  }
+                        return ListView.builder(
+                          itemCount: requests.length,
+                          itemBuilder: (context, index) {
+                            Requests request = requests[index];
+                            return GestureDetector(
+                              onTap: () async {
+                                final result = await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) {
+                                      return AssignRequestScreen(
+                                        request: request,
+                                      );
+                                    },
+                                  ),
+                                );
 
-                  // List<Requests> filter = snapshot.data!;
-                  return ListView.builder(
-                    itemCount: requests.length,
-                    itemBuilder: (context, index) {
-                      Requests request = requests[index];
-                      return GestureDetector(
-                        onTap: () async {
-                          final result = await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) {
-                                return AssignRequestScreen(request: request);
+                                // Nếu AssignRequestScreen trả về true => có thay đổi, reload data
+                                if (result == true) {
+                                  await _loadStatistics();
+                                  await _loadFilteredRequests();
+                                  await _loadAllRequests();
+                                }
                               },
-                            ),
-                          );
-
-                          // Nếu AssignRequestScreen trả về true => có thay đổi, reload data
-                          if (result == true) {
-                            await _loadStatistics();
-                            await _loadFilteredRequests();
-                          }
-                        },
-                        child: Card(
-                          color: request.priority.name == "low"
-                              ? Colors.blue[50]
-                              : request.priority.name == "medium"
-                              ? Colors.amber[50]
-                              : Colors.red[50],
-                          child: Padding(
-                            padding: EdgeInsets.all(12),
-                            child: ListTile(
-                              leading: Icon(
-                                request.priority.name == "low"
-                                    ? Icons.trending_down
-                                    : request.priority.name == "medium"
-                                    ? Icons.trending_flat
-                                    : Icons.trending_up,
+                              child: Card(
                                 color: request.priority.name == "low"
-                                    ? Colors.blue[800]
+                                    ? Colors.blue[50]
                                     : request.priority.name == "medium"
-                                    ? Colors.amber[800]
-                                    : Colors.red[800],
-                                size: 30,
-                              ),
-                              title: Text(
-                                request.content,
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
+                                    ? Colors.amber[50]
+                                    : Colors.red[50],
+                                child: Padding(
+                                  padding: EdgeInsets.all(12),
+                                  child: ListTile(
+                                    leading: Icon(
+                                      request.priority.name == "low"
+                                          ? Icons.trending_down
+                                          : request.priority.name == "medium"
+                                          ? Icons.trending_flat
+                                          : Icons.trending_up,
+                                      color: request.priority.name == "low"
+                                          ? Colors.blue[800]
+                                          : request.priority.name == "medium"
+                                          ? Colors.amber[800]
+                                          : Colors.red[800],
+                                      size: 30,
+                                    ),
+                                    title: Text(
+                                      request.content,
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    subtitle: Text(
+                                      'Sent by: ${usernameCache[request.userId] ?? 'Loading...'} | Priority: ${request.priority.name}',
+                                      style: TextStyle(fontSize: 12),
+                                    ),
+                                    trailing: Text(
+                                      "${request.submissionTime.day}/${request.submissionTime.month}/${request.submissionTime.year}",
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey[700],
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               ),
-                              subtitle: FutureBuilder<String>(
-                                future: _getUsername(request.userId!),
-                                builder: (context, snapshot) {
-                                  String username = snapshot.data ?? 'Unknown';
-                                  return Text(
-                                    'Sent by: $username | Priority: ${request.priority.name}',
-                                    style: TextStyle(fontSize: 12),
-                                  );
-                                },
-                              ),
-                              trailing: Text(
-                                "${request.submissionTime.day}/${request.submissionTime.month}/${request.submissionTime.year}",
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey[700],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  );
-                },
-              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
             ),
           ],
         ),
