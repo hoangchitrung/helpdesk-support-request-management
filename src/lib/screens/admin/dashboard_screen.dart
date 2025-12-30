@@ -13,6 +13,7 @@ class _DashBoardState extends State<DashboardScreen> {
   int totalRequest = 0;
   int totalInProgress = 0;
   int totalCompleted = 0;
+  int currentIndex = 0;
 
   // status
   bool isLow = false;
@@ -24,6 +25,7 @@ class _DashBoardState extends State<DashboardScreen> {
   bool isCompleted = false;
 
   List<Requests> filteredRequests = [];
+  Map<String, String> usernameCache = {};
 
   Future<void> _loadStatistics() async {
     int inProgressCount = await RequestService().getInProgressRequests();
@@ -71,6 +73,19 @@ class _DashBoardState extends State<DashboardScreen> {
     });
   }
 
+  Future<String> _getUsername(String userId) async {
+    if (usernameCache.containsKey(userId)) {
+      return usernameCache[userId]!;
+    }
+    try {
+      String username = await RequestService().getUsernameById(userId);
+      usernameCache[userId] = username;
+      return username;
+    } catch (e) {
+      return 'Unknown';
+    }
+  }
+
   @override
   void initState() {
     // TODO: implement initState
@@ -96,36 +111,32 @@ class _DashBoardState extends State<DashboardScreen> {
             GridView.count(
               shrinkWrap: true,
               physics: NeverScrollableScrollPhysics(),
-              crossAxisCount: 2,
-              crossAxisSpacing: 10,
-              mainAxisSpacing: 10,
+              crossAxisCount: 3,
               children: [
                 Card(
                   color: Colors.blue[100],
                   child: Padding(
-                    padding: EdgeInsets.all(20),
+                    padding: EdgeInsets.all(10),
                     child: Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(
                             Icons.assignment,
-                            size: 40,
+                            size: 26,
                             color: Colors.blue[800],
                           ),
-                          SizedBox(height: 10),
                           Text(
-                            "Total request:",
+                            "Total",
                             style: TextStyle(
-                              fontSize: 16,
+                              fontSize: 12,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          SizedBox(height: 8),
                           Text(
                             "$totalRequest",
                             style: TextStyle(
-                              fontSize: 28,
+                              fontSize: 20,
                               fontWeight: FontWeight.bold,
                               color: Colors.blue[800],
                             ),
@@ -138,29 +149,27 @@ class _DashBoardState extends State<DashboardScreen> {
                 Card(
                   color: Colors.amber[100],
                   child: Padding(
-                    padding: EdgeInsets.all(20),
+                    padding: EdgeInsets.all(10),
                     child: Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(
                             Icons.hourglass_bottom,
-                            size: 40,
+                            size: 26,
                             color: Colors.amber[800],
                           ),
-                          SizedBox(height: 10),
                           Text(
-                            "In Progress:",
+                            "In Progress",
                             style: TextStyle(
-                              fontSize: 16,
+                              fontSize: 12,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          SizedBox(height: 8),
                           Text(
                             "$totalInProgress",
                             style: TextStyle(
-                              fontSize: 28,
+                              fontSize: 20,
                               fontWeight: FontWeight.bold,
                               color: Colors.amber[800],
                             ),
@@ -173,29 +182,27 @@ class _DashBoardState extends State<DashboardScreen> {
                 Card(
                   color: Colors.green[100],
                   child: Padding(
-                    padding: EdgeInsets.all(20),
+                    padding: EdgeInsets.all(10),
                     child: Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(
                             Icons.check_circle,
-                            size: 40,
+                            size: 26,
                             color: Colors.green[800],
                           ),
-                          SizedBox(height: 10),
                           Text(
-                            "Completed:",
+                            "Completed",
                             style: TextStyle(
-                              fontSize: 16,
+                              fontSize: 12,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          SizedBox(height: 8),
                           Text(
                             "$totalCompleted",
                             style: TextStyle(
-                              fontSize: 28,
+                              fontSize: 20,
                               fontWeight: FontWeight.bold,
                               color: Colors.green[800],
                             ),
@@ -354,9 +361,15 @@ class _DashBoardState extends State<DashboardScreen> {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            subtitle: Text(
-                              "Priority: ${request.priority.name} | Status: ${request.status.name}",
-                              style: TextStyle(fontSize: 13),
+                            subtitle: FutureBuilder<String>(
+                              future: _getUsername(request.userId!),
+                              builder: (context, snapshot) {
+                                String username = snapshot.data ?? 'Unknown';
+                                return Text(
+                                  'Sent by: $username | Priority: ${request.priority.name}',
+                                  style: TextStyle(fontSize: 12),
+                                );
+                              },
                             ),
                             trailing: Text(
                               "${request.submissionTime.day}/${request.submissionTime.month}/${request.submissionTime.year}",
@@ -375,6 +388,21 @@ class _DashBoardState extends State<DashboardScreen> {
             ),
           ],
         ),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: currentIndex,
+        onTap: (int index) {
+          setState(() {
+            currentIndex = index;
+          });
+        },
+        items: [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.dashboard),
+            label: 'Dashboard',
+          ),
+          BottomNavigationBarItem(icon: Icon(Icons.list), label: 'Manage'),
+        ],
       ),
     );
   }

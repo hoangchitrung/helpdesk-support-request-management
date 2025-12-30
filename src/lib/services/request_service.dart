@@ -70,6 +70,7 @@ class RequestService {
     return requests;
   }
 
+  // lấy requests theo priority
   Future<List<Requests>> loadRequestsByPriority(List<String> priority) async {
     // lấy những quest nào thực hiện
     List<Requests> allRequests = await loadAllRequests();
@@ -83,6 +84,7 @@ class RequestService {
         .toList();
   }
 
+  // lấy danh sách theo status
   Future<List<Requests>> loadRequestsByStatus(List<String> status) async {
     // lấy những quest nào thực hiện
     List<Requests> allRequests = await loadAllRequests();
@@ -96,6 +98,7 @@ class RequestService {
         .toList();
   }
 
+  // lấy danh sách theo status để hiển thị statistics ở admin dasboard
   Future<int> getInProgressRequests() async {
     QuerySnapshot snapshot = await FirebaseFirestore.instance
         .collection('requests')
@@ -117,5 +120,15 @@ class RequestService {
         .where('status', isEqualTo: 'completed')
         .get();
     return snapshot.docs.length;
+  }
+
+  // lấy username dựa theo userId
+  Future<String> getUsernameById(String userId) async {
+    DocumentSnapshot snapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .get();
+
+    return snapshot['username'];
   }
 }
