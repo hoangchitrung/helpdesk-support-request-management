@@ -14,6 +14,8 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashBoardState extends State<DashboardScreen> {
+  TextEditingController _searchController = TextEditingController();
+
   int totalRequest = 0;
   int totalInProgress = 0;
   int totalCompleted = 0;
@@ -24,6 +26,8 @@ class _DashBoardState extends State<DashboardScreen> {
   int CompletedCount = 0;
 
   List<Requests> allRequests = [];
+  List<Requests> filteredList = [];
+
   bool isLoadingAllRequests = true;
 
   // hàm logout
@@ -47,10 +51,35 @@ class _DashBoardState extends State<DashboardScreen> {
     });
   }
 
+  void _onSearchChanged(String searchQuery) {
+    // remove the unnecessary space of the search query and lowercase
+    String query = searchQuery.trim().toLowerCase();
+
+    setState(() {
+      if (query.isEmpty) {
+        filteredList = allRequests;
+      } else if (query == 'low' || query == 'medium' || query == 'high') {
+        filteredList = allRequests.where((r) {
+          return r.priority.name.toLowerCase().contains(query);
+        }).toList();
+      } else {
+        filteredList = allRequests.where((r) {
+          return r.content.toLowerCase().contains(query);
+        }).toList();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+    _searchController.dispose();
+  }
+
   @override
   void initState() {
     super.initState();
-    AppLifecycleListener(onResume: _loadStatistics);
     _loadStatistics();
     _loadAllRequests();
   }
@@ -63,11 +92,13 @@ class _DashBoardState extends State<DashboardScreen> {
       List<Requests> list = await RequestService().loadAllRequests();
       setState(() {
         allRequests = list;
+        filteredList = allRequests;
       });
     } catch (e) {
       setState(() {
         allRequests = [];
       });
+      throw Exception(e);
     } finally {
       setState(() {
         isLoadingAllRequests = false;
@@ -207,16 +238,25 @@ class _DashBoardState extends State<DashboardScreen> {
             SizedBox(height: 12),
             // Search input (auto-search by content)
             // Text Field
+            TextField(
+              controller: _searchController,
+              onChanged: _onSearchChanged,
+              decoration: InputDecoration(
+                border: OutlineInputBorder(),
+                suffixIcon: Icon(Icons.search_outlined),
+                labelText: "Searching...",
+              ),
+            ),
             SizedBox(height: 12),
             Expanded(
               child: isLoadingAllRequests
                   ? Center(child: CircularProgressIndicator())
-                  : allRequests.isEmpty
+                  : filteredList.isEmpty
                   ? Text("No requests found")
                   : ListView.builder(
-                      itemCount: allRequests.length,
+                      itemCount: filteredList.length,
                       itemBuilder: (context, index) {
-                        Requests request = allRequests[index];
+                        Requests request = filteredList[index];
                         return GestureDetector(
                           onTap: () async {
                             final result = await Navigator.push(
