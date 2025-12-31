@@ -19,4 +19,8 @@ class Users {
       role: data['role'],
     );
   }
+
+  Map<String, dynamic> toMap() {
+    return {'username': username, 'email': email, 'role': role};
+  }
 }
