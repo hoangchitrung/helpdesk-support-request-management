@@ -233,4 +233,23 @@ class RequestService {
     }).toList();
     return requests;
   }
+
+  // get requesters list (users not staff/admin)
+  Future<List<Users>> getRequestersList() async {
+    try {
+      QuerySnapshot snapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .get(); // Get all users
+      List<Users> users = snapshot.docs.map((doc) {
+        return Users.fromMap(doc.data() as Map<String, dynamic>, doc.id);
+      }).toList();
+      // Filter client-side: role != 'staff' and role != 'admin'
+      users = users
+          .where((user) => user.role != 'staff' && user.role != 'admin')
+          .toList();
+      return users;
+    } catch (e) {
+      throw Exception("Error getting requesters: $e");
+    }
+  }
 }

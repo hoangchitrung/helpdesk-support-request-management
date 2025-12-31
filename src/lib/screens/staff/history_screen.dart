@@ -13,8 +13,7 @@ class HistoryScreen extends StatefulWidget {
 
 class _HistoryState extends State<HistoryScreen> {
   String staffId = FirebaseAuth.instance.currentUser!.uid;
-  late Future<List<Requests>> _futureRequests = RequestService()
-      .getCompletedRequestsByStaffId(staffId);
+  late Future<List<Requests>> _futureRequests = RequestService().getCompletedRequestsByStaffId(staffId);
 
   // hàm logout
   Future<void> _logout() async {

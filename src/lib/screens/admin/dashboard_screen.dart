@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:src/models/requests.dart';
 import 'dart:async';
 import 'package:src/screens/admin/assign_request_screen.dart';
-import 'package:src/screens/admin/manage_screen.dart';
+import 'package:src/screens/admin/manage_staff_screen.dart';
+import 'package:src/screens/admin/manage_requester_screen.dart';
 import 'package:src/screens/auth/login_screen.dart';
 import 'package:src/services/request_service.dart';
 
@@ -30,6 +31,8 @@ class _DashBoardState extends State<DashboardScreen> {
   List<Requests> filteredList = [];
 
   bool isLoadingAllRequests = true;
+
+  late List<Widget> _screens = [ManageStaffScreen(), ManageRequesterScreen()];
   int _currentIndex = 0;
 
   // hàm logout
@@ -108,6 +111,221 @@ class _DashBoardState extends State<DashboardScreen> {
     }
   }
 
+  Widget _buildHome() {
+    return Padding(
+      padding: EdgeInsets.all(20),
+      child: Column(
+        children: [
+          GridView.count(
+            shrinkWrap: true,
+            physics: NeverScrollableScrollPhysics(),
+            crossAxisCount: 3,
+            children: [
+              Card(
+                color: Colors.blue[100],
+                child: Padding(
+                  padding: EdgeInsets.all(10),
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.assignment,
+                          size: 26,
+                          color: Colors.blue[800],
+                        ),
+                        Text(
+                          "Total",
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          "$totalRequest",
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blue[800],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              Card(
+                color: Colors.amber[100],
+                child: Padding(
+                  padding: EdgeInsets.all(10),
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.hourglass_bottom,
+                          size: 26,
+                          color: Colors.amber[800],
+                        ),
+                        Text(
+                          "In Progress",
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          "$totalInProgress",
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.amber[800],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              Card(
+                color: Colors.green[100],
+                child: Padding(
+                  padding: EdgeInsets.all(10),
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.check_circle,
+                          size: 26,
+                          color: Colors.green[800],
+                        ),
+                        Text(
+                          "Completed",
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          "$totalCompleted",
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green[800],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 12),
+          // Search input (auto-search by content)
+          // Text Field
+          TextField(
+            controller: _searchController,
+            onChanged: _onSearchChanged,
+            decoration: InputDecoration(
+              border: OutlineInputBorder(),
+              suffixIcon: Icon(Icons.search_outlined),
+              labelText: "Searching...",
+            ),
+          ),
+          SizedBox(height: 12),
+          Expanded(
+            child: isLoadingAllRequests
+                ? Center(child: CircularProgressIndicator())
+                : filteredList.isEmpty
+                ? Text("No requests found")
+                : ListView.builder(
+                    itemCount: filteredList.length,
+                    itemBuilder: (context, index) {
+                      Requests request = filteredList[index];
+                      return GestureDetector(
+                        onTap: () async {
+                          final result = await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) {
+                                return AssignRequestScreen(request: request);
+                              },
+                            ),
+                          );
+
+                          // Nếu AssignRequestScreen trả về true => có thay đổi, reload data
+                          if (result == true) {
+                            await _loadStatistics();
+                            await _loadAllRequests();
+                          }
+                        },
+                        child: Card(
+                          color: request.priority.name == "low"
+                              ? Colors.blue[50]
+                              : request.priority.name == "medium"
+                              ? Colors.amber[50]
+                              : Colors.red[50],
+                          child: Padding(
+                            padding: EdgeInsets.all(12),
+                            child: ListTile(
+                              leading: Icon(
+                                request.priority.name == "low"
+                                    ? Icons.trending_down
+                                    : request.priority.name == "medium"
+                                    ? Icons.trending_flat
+                                    : Icons.trending_up,
+                                color: request.priority.name == "low"
+                                    ? Colors.blue[800]
+                                    : request.priority.name == "medium"
+                                    ? Colors.amber[800]
+                                    : Colors.red[800],
+                                size: 30,
+                              ),
+                              title: Text(
+                                request.content,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              subtitle: Text.rich(
+                                TextSpan(
+                                  children: [
+                                    TextSpan(
+                                      text: 'Priority: ',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    TextSpan(
+                                      text: request.priority.name,
+                                      style: TextStyle(fontSize: 12),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              trailing: Text(
+                                "${request.submissionTime.day}/${request.submissionTime.month}/${request.submissionTime.year}",
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[700],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -127,242 +345,26 @@ class _DashBoardState extends State<DashboardScreen> {
           ],
         ),
       ),
-      body: _currentIndex == 0
-          ? Padding(
-              padding: EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  GridView.count(
-                    shrinkWrap: true,
-                    physics: NeverScrollableScrollPhysics(),
-                    crossAxisCount: 3,
-                    children: [
-                      Card(
-                        color: Colors.blue[100],
-                        child: Padding(
-                          padding: EdgeInsets.all(10),
-                          child: Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.assignment,
-                                  size: 26,
-                                  color: Colors.blue[800],
-                                ),
-                                Text(
-                                  "Total",
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                Text(
-                                  "$totalRequest",
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.blue[800],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      Card(
-                        color: Colors.amber[100],
-                        child: Padding(
-                          padding: EdgeInsets.all(10),
-                          child: Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.hourglass_bottom,
-                                  size: 26,
-                                  color: Colors.amber[800],
-                                ),
-                                Text(
-                                  "In Progress",
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                Text(
-                                  "$totalInProgress",
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.amber[800],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      Card(
-                        color: Colors.green[100],
-                        child: Padding(
-                          padding: EdgeInsets.all(10),
-                          child: Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.check_circle,
-                                  size: 26,
-                                  color: Colors.green[800],
-                                ),
-                                Text(
-                                  "Completed",
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                Text(
-                                  "$totalCompleted",
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.green[800],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 12),
-                  // Search input (auto-search by content)
-                  // Text Field
-                  TextField(
-                    controller: _searchController,
-                    onChanged: _onSearchChanged,
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(),
-                      suffixIcon: Icon(Icons.search_outlined),
-                      labelText: "Searching...",
-                    ),
-                  ),
-                  SizedBox(height: 12),
-                  Expanded(
-                    child: isLoadingAllRequests
-                        ? Center(child: CircularProgressIndicator())
-                        : filteredList.isEmpty
-                        ? Text("No requests found")
-                        : ListView.builder(
-                            itemCount: filteredList.length,
-                            itemBuilder: (context, index) {
-                              Requests request = filteredList[index];
-                              return GestureDetector(
-                                onTap: () async {
-                                  final result = await Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) {
-                                        return AssignRequestScreen(
-                                          request: request,
-                                        );
-                                      },
-                                    ),
-                                  );
-
-                                  // Nếu AssignRequestScreen trả về true => có thay đổi, reload data
-                                  if (result == true) {
-                                    await _loadStatistics();
-                                    await _loadAllRequests();
-                                  }
-                                },
-                                child: Card(
-                                  color: request.priority.name == "low"
-                                      ? Colors.blue[50]
-                                      : request.priority.name == "medium"
-                                      ? Colors.amber[50]
-                                      : Colors.red[50],
-                                  child: Padding(
-                                    padding: EdgeInsets.all(12),
-                                    child: ListTile(
-                                      leading: Icon(
-                                        request.priority.name == "low"
-                                            ? Icons.trending_down
-                                            : request.priority.name == "medium"
-                                            ? Icons.trending_flat
-                                            : Icons.trending_up,
-                                        color: request.priority.name == "low"
-                                            ? Colors.blue[800]
-                                            : request.priority.name == "medium"
-                                            ? Colors.amber[800]
-                                            : Colors.red[800],
-                                        size: 30,
-                                      ),
-                                      title: Text(
-                                        request.content,
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      subtitle: Text.rich(
-                                        TextSpan(
-                                          children: [
-                                            TextSpan(
-                                              text: 'Priority: ',
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                            TextSpan(
-                                              text: request.priority.name,
-                                              style: TextStyle(fontSize: 12),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      trailing: Text(
-                                        "${request.submissionTime.day}/${request.submissionTime.month}/${request.submissionTime.year}",
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.grey[700],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                  ),
-                ],
-              ),
-            )
-          : ManageScreen(),
+      body: currentIndex == 0
+          ? _buildHome()
+          : IndexedStack(index: currentIndex - 1, children: _screens),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: currentIndex,
         onTap: (int index) {
-          if (index == 1) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => ManageScreen()),
-            );
-          } else {
-            setState(() {
-              currentIndex = index;
-            });
-          }
+          setState(() {
+            currentIndex = index;
+          });
         },
         items: [
           BottomNavigationBarItem(
             icon: Icon(Icons.dashboard),
             label: 'Dashboard',
           ),
-          BottomNavigationBarItem(icon: Icon(Icons.list), label: 'Manage'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.admin_panel_settings),
+            label: 'Staff',
+          ),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Requester'),
         ],
       ),
     );

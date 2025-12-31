@@ -4,14 +4,14 @@ import 'package:src/models/users.dart';
 import 'package:src/services/request_service.dart';
 import 'package:src/services/user_service.dart';
 
-class ManageScreen extends StatefulWidget {
-  const ManageScreen({super.key});
+class ManageStaffScreen extends StatefulWidget {
+  const ManageStaffScreen({super.key});
 
   @override
-  State<StatefulWidget> createState() => _ManageState();
+  State<StatefulWidget> createState() => _ManageStaffState();
 }
 
-class _ManageState extends State<ManageScreen> {
+class _ManageStaffState extends State<ManageStaffScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
