@@ -184,4 +184,53 @@ class RequestService {
       throw Exception("Error updating request: $e");
     }
   }
+
+  // mark request as completed
+  Future<void> markRequestCompleted(String requestId) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('requests')
+          .doc(requestId)
+          .update({'status': 'completed'});
+    } catch (e) {
+      throw Exception("Error marking completed: $e");
+    }
+  }
+
+  // mark request as completed
+  Future<void> updateRequestDate(String requestId) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('requests')
+          .doc(requestId)
+          .update({'submissionTime': DateTime.now()});
+    } catch (e) {
+      throw Exception("Error marking completed: $e");
+    }
+  }
+
+  // get requests assigned to staff
+  Future<List<Requests>> getRequestsByStaffId(String staffId) async {
+    QuerySnapshot snapshot = await FirebaseFirestore.instance
+        .collection('requests')
+        .where('staffId', isEqualTo: staffId)
+        .where('status', isEqualTo: 'in_progress')
+        .get();
+    List<Requests> requests = snapshot.docs.map((doc) {
+      return Requests.fromMap(doc.data() as Map<String, dynamic>, doc.id);
+    }).toList();
+    return requests;
+  }
+
+  Future<List<Requests>> getCompletedRequestsByStaffId(String staffId) async {
+    QuerySnapshot snapshot = await FirebaseFirestore.instance
+        .collection('requests')
+        .where('staffId', isEqualTo: staffId)
+        .where('status', isEqualTo: 'completed')
+        .get();
+    List<Requests> requests = snapshot.docs.map((doc) {
+      return Requests.fromMap(doc.data() as Map<String, dynamic>, doc.id);
+    }).toList();
+    return requests;
+  }
 }
