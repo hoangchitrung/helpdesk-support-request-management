@@ -58,6 +58,55 @@ The project follows a clean architecture to ensure maintainability:
 
 ## 🚀 Getting Started
 1. **Clone the repository**:
-   ```bash
-   git clone [YOUR_REPOSITORY_URL]
-   cd helpdesk_support_app
+  ```bash
+  git clone https://github.com/hoangchitrung/helpdesk-support-request-management.git
+  cd helpdesk-support-request-management
+  ```
+2. **Install dependencies**:
+  ```bash
+  flutter pub get
+  ```
+3. **Firebase Configuration**:
+- Run `flutterfire configure` to link your local enviroment with your Firebase project.
+- Ensure `firebase_options.dart` is generated in the `lib` folder
+4. **Run the app**:
+  ```bash
+  fluter run
+  ```
+## 📱 Project Demo
+1. **Register Screen**
+
+<img width="411" height="863" alt="image" src="https://github.com/user-attachments/assets/3cfb90c8-c410-4978-ab53-9f2917795041" />
+
+2. **Login Screen**
+
+<img width="411" height="863" alt="image" src="https://github.com/user-attachments/assets/520f9ea4-00cf-461b-a0ad-2ace0f5248de" />
+
+3. **User Home Screen**
+
+<img width="411" height="863" alt="image" src="https://github.com/user-attachments/assets/da476b4b-72a6-43d9-a13d-7b7c8bdb41e5" />
+
+4. **Add Request Screen**
+
+<img width="411" height="863" alt="image" src="https://github.com/user-attachments/assets/8bd9dbdc-afc1-4dd0-bdfc-0b8ca3998f62" />
+
+5. **Admin Home Screen**
+
+<img width="411" height="863" alt="image" src="https://github.com/user-attachments/assets/859b35a9-890a-4999-a23a-7be9a7b6d45f" />
+
+6. **Staff Manage Screen**
+
+<img width="411" height="863" alt="image" src="https://github.com/user-attachments/assets/31ccf97a-2f20-4100-bd81-9538c9620420" />
+
+7. **Requesters Manage Screen**
+
+<img width="411" height="863" alt="image" src="https://github.com/user-attachments/assets/973e5a7a-1f09-4705-8ae0-58a17dc9763d" />
+
+8. **Staff Home Screen**
+
+<img width="411" height="863" alt="image" src="https://github.com/user-attachments/assets/adf435f7-3d44-480b-ac85-1dc406eed248" />
+
+9. **Requests History Screen**
+
+<img width="411" height="863" alt="image" src="https://github.com/user-attachments/assets/6938045e-e297-4078-b353-3cb77375eab6" />
+
