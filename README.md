@@ -1,7 +1,5 @@
 # <img width="41" height="41" alt="logo" src="https://github.com/user-attachments/assets/96bc1a48-c17b-48ff-91b3-6e8440cf9c7c" /> Helpdesk Support Request Management
 
-# Helpdesk Support Request Management Application
-
 A mobile application built with Flutter and Firebase designed to streamline technical support workflows within organizations. This project focuses on efficient request tracking, task assignment, and progress monitoring.
 
 ## 📋 Project Overview (Topic 3)
