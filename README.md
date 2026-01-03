@@ -1,7 +1,7 @@
 # 🛠️ Helpdesk Support Request Management
 
-![App Icon]<img width="1024" height="1024" alt="image" src="https://github.com/user-attachments/assets/c0adfbf6-a91a-41c3-af31-f2e0876a597b" />
-) <!-- Replace path if you store the icon elsewhere -->
+<img width="256" height="256" alt="image" src="[https://github.com/user-attachments/assets/c0adfbf6-a91a-41c3-af31-f2e0876a597b](https://github.com/user-attachments/assets/8b5ed62f-e7a9-46b6-9570-0a821aa38841)" /> <!-- Replace path if you store the icon elsewhere -->
+
 
 Short description
 A mobile Helpdesk Support Request Management app built with Flutter and Firebase. It allows users to create support requests, assign them to staff, track status and progress, and keep a history of changes.
